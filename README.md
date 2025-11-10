@@ -1,198 +1,281 @@
-Intelligent Enterprise Assistant
+NAME:DIVYA E
+REG NO: 212223230050
+CHATBOT
+AIM
+To develop a scalable AI-enabled chatbot that helps employees of a large public sector organization with HR, IT, and organizational queries using NLP and document processing, while ensuring security (2FA) and filtering inappropriate language.​
+
+ALGORITHM
+Step-by-Step Algorithm:
+
+User Authentication:
+
+Implement 2-factor authentication (email + OTP).​
+
+Receive Query:
+
+Accept employee query via web/chat interface.
+
+Filter Language:
+
+Check user input against list of banned words.
+
+Intent Detection:
+
+Use pretrained NLP model (BERT or similar) to classify query (HR, IT, Events, etc.).​
+
+Response Retrieval:
+
+Retrieve or generate response from FAQ/document database.
+
+Document Processing:
+
+If user uploads a document, extract summary/keywords using NLP pipeline.
+
+Output Response:
+
+Return response in under 5 seconds.
+
+Scalability:
+
+Use threading/async code to serve at least 5 users in parallel.
+
+REQUIRED TOOLS
+Python 3.8+
+
+Flask (Web server)
+
+transformers (HuggingFace, BERT for NLP)
+
+NLTK or spaCy (language filtering, keyword extraction)
+
+PyOTP (for email-based 2FA)
+
+Threading/asyncio (to handle multiple users)
+
+sqlite3 or TinyDB (for FAQ/document storage)
+
+Simple front-end: HTML/JS/Bootstrap
+
+IMPLEMENTATION CODE (Simplified Example)
 
 
-An AI-powered virtual assistant designed to help the public sector work smarter. It automates tasks like document search, policy answering, leave requests, and helpdesk support — all through natural conversation.
-
-Overview
-
-
-The Intelligent Enterprise Assistant acts as a smart FAQ chatbot for organizational use.
-It uses predefined knowledge to respond to queries and can be easily extended to support more workflows.
-
-This prototype demonstrates how AI-powered chat support can:
-
-Answer repeated employee/citizen queries instantly
-Reduce helpdesk workload
-Improve access to organizational knowledge
-Serve as a foundation for integrating automation and data lookup
-Problem Statement
-Public sector organizations handle large volumes of repetitive queries related to rules, HR policies, procedures, and internal services.
-Traditional systems require manual lookup, causing delays and inefficiency.
-
-Features
-• Conversational Chat Interface • Predefined knowledge responses • Web-based UI • Accessible using any browser • Easy to Customize • Responds to common policy and helpdesk queries • Users can ask questions naturally
-
-Project Structure
 ```
-intelligent-enterprise-assistant/
-│
-├── app.py
-│
-├── templates/
-│ └── index.html 
-│
-└── static/
-└── (CSS / JS files)
-```
-Implementation Code:
 
-app.py
-```
-from flask import Flask, render_template, request, jsonify
+1. Train Your Model (train_chatbot.py)
 
-app = Flask(__name__)
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import pickle
 
-responses = {
-    "hi": "Hello! How can I assist you today?",
-    "hello": "Hi there! How can I help?",
-    "how are you": "I'm working perfectly! 😊",
-    "bye": "Goodbye! Have a great day!",
+# Sample data: query and intent
+data = {
+    'question': [
+        "How many leave days do I have?",
+        "Who do I call for IT support?",
+        "When is the next company event?",
+        "How do I update my address?",
+        "Can I request work from home?",
+    ],
+    'intent': [
+        "leave_balance",
+        "it_support",
+        "company_event",
+        "update_address",
+        "work_from_home"
+    ]
+}
+df = pd.DataFrame(data)
 
-    "what is an intelligent enterprise": "An Intelligent Enterprise uses AI, automation, and data to improve efficiency and decision making.",
-    "what is your purpose": "My purpose is to assist employees and citizens by providing quick and accurate information.",
-    "how do you help employees": "I help employees by answering questions instantly and reducing manual work.",
-    "how to apply for leave": "You can apply leave using the HR Portal under Employee Self Service.",
-    "what are office working hours": "Office hours are Monday to Friday, 9 AM to 5 PM.",
-    "how to register a complaint": "You can register a complaint through the Citizen Grievance Portal.",
-    "how to reset my password": "You can reset your password through the IT Helpdesk Support System.",
-    "where to get service forms": "Service forms are available on the official e-Governance portal.",
-    "what documents are needed for id card": "You need Aadhaar Card, Employee ID, and a passport-size photograph."
+# Vectorizer & Model pipeline
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(df['question'])
+y = df['intent']
+
+model = LogisticRegression(max_iter=200)
+model.fit(X, y)
+
+# Save artifacts
+pickle.dump(model, open("model.pkl", "wb"))
+pickle.dump(vectorizer, open("vectorizer.pkl", "wb"))
+pickle.dump(list(df['intent']), open("intents.pkl", "wb"))
+print("Training complete, model and vectorizer saved.")
+
+2. Simple Chatbot Server (chatbot_server.py)
+import pickle
+from flask import Flask, request, jsonify
+
+ app = Flask(__name__) 
+
+model = pickle.load(open("model.pkl", "rb"))
+vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+intents = pickle.load(open("intents.pkl", "rb"))
+
+response_map = {
+    "leave_balance": "You have 15 days of annual leave remaining.",
+    "it_support": "Please call the IT helpdesk at extension 1234.",
+    "company_event": "The next event is the Annual Team Meet on November 10th.",
+    "update_address": "To update your address, visit the HR portal and use the profile section.",
+    "work_from_home": "You can request work-from-home via the company HR portal."
 }
 
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/get", methods=["POST"])
-def chatbot_response():
-    user_msg = request.form["msg"].lower()
-    reply = responses.get(user_msg, "Sorry, I didn't understand. Can you try again?")
-    return jsonify({"response": reply})
+@app.route("/chat", methods=["POST"])
+def chat():
+    query = request.json.get("message", "")
+    X = vectorizer.transform([query])
+    pred_intent = model.predict(X)[0]
+    response = response_map.get(pred_intent, "I am sorry, I did not understand your question.")
+    return jsonify({"intent": pred_intent, "response": response})
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
-index.html
+
+
 
 ```
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Simple Chatbot</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+output:
 
-<h2>💬 Simple AI Chatbot</h2>
+NAME:SANDHIYA SREE
+REG NO: 212223220093
+CHATBOT
+AIM
+To develop a scalable AI-enabled chatbot that helps employees of a large public sector organization with HR, IT, and organizational queries using NLP and document processing, while ensuring security (2FA) and filtering inappropriate language.​
 
-<div id="chatbox"></div>
+ALGORITHM
+Step-by-Step Algorithm:
 
-<div class="input-area">
-    <input type="text" id="userInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
-</div>
+User Authentication:
 
-<script src="/static/script.js"></script>
-</body>
-</html>
+Implement 2-factor authentication (email + OTP).​
+
+Receive Query:
+
+Accept employee query via web/chat interface.
+
+Filter Language:
+
+Check user input against list of banned words.
+
+Intent Detection:
+
+Use pretrained NLP model (BERT or similar) to classify query (HR, IT, Events, etc.).​
+
+Response Retrieval:
+
+Retrieve or generate response from FAQ/document database.
+
+Document Processing:
+
+If user uploads a document, extract summary/keywords using NLP pipeline.
+
+Output Response:
+
+Return response in under 5 seconds.
+
+Scalability:
+
+Use threading/async code to serve at least 5 users in parallel.
+
+REQUIRED TOOLS
+Python 3.8+
+
+Flask (Web server)
+
+transformers (HuggingFace, BERT for NLP)
+
+NLTK or spaCy (language filtering, keyword extraction)
+
+PyOTP (for email-based 2FA)
+
+Threading/asyncio (to handle multiple users)
+
+sqlite3 or TinyDB (for FAQ/document storage)
+
+Simple front-end: HTML/JS/Bootstrap
+
+IMPLEMENTATION CODE (Simplified Example)
+
+
 ```
-style.css
+
+1. Train Your Model (train_chatbot.py)
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import pickle
+
+# Sample data: query and intent
+data = {
+    'question': [
+        "How many leave days do I have?",
+        "Who do I call for IT support?",
+        "When is the next company event?",
+        "How do I update my address?",
+        "Can I request work from home?",
+    ],
+    'intent': [
+        "leave_balance",
+        "it_support",
+        "company_event",
+        "update_address",
+        "work_from_home"
+    ]
+}
+df = pd.DataFrame(data)
+
+# Vectorizer & Model pipeline
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(df['question'])
+y = df['intent']
+
+model = LogisticRegression(max_iter=200)
+model.fit(X, y)
+
+# Save artifacts
+pickle.dump(model, open("model.pkl", "wb"))
+pickle.dump(vectorizer, open("vectorizer.pkl", "wb"))
+pickle.dump(list(df['intent']), open("intents.pkl", "wb"))
+print("Training complete, model and vectorizer saved.")
+
+2. Simple Chatbot Server (chatbot_server.py)
+import pickle
+from flask import Flask, request, jsonify
+
+ app = Flask(__name__) 
+
+model = pickle.load(open("model.pkl", "rb"))
+vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+intents = pickle.load(open("intents.pkl", "rb"))
+
+response_map = {
+    "leave_balance": "You have 15 days of annual leave remaining.",
+    "it_support": "Please call the IT helpdesk at extension 1234.",
+    "company_event": "The next event is the Annual Team Meet on November 10th.",
+    "update_address": "To update your address, visit the HR portal and use the profile section.",
+    "work_from_home": "You can request work-from-home via the company HR portal."
+}
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    query = request.json.get("message", "")
+    X = vectorizer.transform([query])
+    pred_intent = model.predict(X)[0]
+    response = response_map.get(pred_intent, "I am sorry, I did not understand your question.")
+    return jsonify({"intent": pred_intent, "response": response})
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
 ```
-body {
-  background: #f2f2f2;
-  text-align: center;
-  font-family: Arial, sans-serif;
-}
+output:
 
-h2 {
-  color: #333;
-}
-
-#chatbox {
-  width: 60%;
-  height: 350px;
-  background: white;
-  border-radius: 6px;
-  padding: 10px;
-  margin: auto;
-  margin-bottom: 10px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-}
-
-.input-area {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-#userInput {
-  width: 50%;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #555;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  background: #007bff;
-  color: white;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-button:hover {
-  background: #0056b3;
-}
-```
-script.js
-```
-function sendMessage() {
-  let msg = document.getElementById("userInput").value;
-  if (msg.trim() === "") return;
-
-  document.getElementById("chatbox").innerHTML += `<p><b>You:</b> ${msg}</p>`;
-
-  fetch("/get", {
-    method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: `msg=${msg}`
-  })
-  .then(response => response.json())
-  .then(data => {
-    document.getElementById("chatbox").innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
-  });
-
-  document.getElementById("userInput").value = "";
-}
-```
-How to Run Everything
-```
- Step 1: Open Terminal in your project folder
- Step 2: Install Dependencies
- pip install flask
- Step 3: Start the Flask Server
- python app.py
- You will see
- Running on http://127.0.0.1:5000/
- Step 4: Open in Browser
- http://127.0.0.1:5000/
- Step 5: Open frontend
-
- Open frontend/index.html in your browser.
- Ask something like:
- Step 4: Open frontend
-  what is an intelligent enterprise?
-
-✅ It’ll reply using your sample policy data!
-Future Enhancements
-• Add AI-based contextual search using embeddings • Voice-based interaction (speech-to-text) • Hindi / Telugu / Tamil language support
-• Integration with actual HRMS system • Admin dashboard for analytics
-
-OUTPUT:
-<img width="1035" height="555" alt="image" src="https://github.com/user-attachments/assets/96c99371-fb84-48f3-99cf-306682c86d1d" />
+<img width="1035" height="555" alt="Screenshot 2025-11-10 134807" src="https://github.com/user-attachments/assets/dbff2b89-0b84-483a-97ff-beb6d1c67477" />
 RESULT:
 Thus the Chatbot is executed Successfully.
+
 
