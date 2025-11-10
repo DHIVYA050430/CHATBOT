@@ -141,13 +141,18 @@ if __name__ == "__main__":
 ```
 output:
 
-NAME:SANDHIYA SREE
-REG NO: 212223220093
+NAME:DIVYA E
+
+REG NO: 212223230050
+
 CHATBOT
-AIM
+
+AIM:
+
 To develop a scalable AI-enabled chatbot that helps employees of a large public sector organization with HR, IT, and organizational queries using NLP and document processing, while ensuring security (2FA) and filtering inappropriate language.​
 
-ALGORITHM
+ALGORITHM:
+
 Step-by-Step Algorithm:
 
 User Authentication:
@@ -280,7 +285,9 @@ if __name__ == "__main__":
 output:
 
 <img width="1035" height="555" alt="Screenshot 2025-11-10 134807" src="https://github.com/user-attachments/assets/dbff2b89-0b84-483a-97ff-beb6d1c67477" />
+
 RESULT:
+
 Thus the Chatbot is executed Successfully.
 
 
