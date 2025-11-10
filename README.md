@@ -4,10 +4,12 @@ REG NO: 212223230050
 
 CHATBOT
 
-AIM
+AIM:
+
 To develop a scalable AI-enabled chatbot that helps employees of a large public sector organization with HR, IT, and organizational queries using NLP and document processing, while ensuring security (2FA) and filtering inappropriate language.​
 
 ALGORITHM
+
 Step-by-Step Algorithm:
 
 User Authentication:
