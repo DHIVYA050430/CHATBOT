@@ -1,7 +1,11 @@
 Intelligent Enterprise Assistant
+
+
 An AI-powered virtual assistant designed to help the public sector work smarter. It automates tasks like document search, policy answering, leave requests, and helpdesk support — all through natural conversation.
 
 Overview
+
+
 The Intelligent Enterprise Assistant acts as a smart FAQ chatbot for organizational use.
 It uses predefined knowledge to respond to queries and can be easily extended to support more workflows.
 
